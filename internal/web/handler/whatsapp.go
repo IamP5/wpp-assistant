@@ -1,21 +1,21 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/IamP5/wpp-assistant/internal/web/handler/dto"
-	"github.com/IamP5/wpp-assistant/pkg"
+	"github.com/IamP5/wpp-assistant/usecase"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 )
 
-func MakeWppHandler(r *mux.Router, n *negroni.Negroni, t *pkg.Twilio, o *pkg.OpenAI) {
+func MakeWppHandler(r *mux.Router, n *negroni.Negroni, messageToChatUsecase *usecase.MessageToChat) {
 	r.Handle("/wpp/receive", n.With(
-		negroni.Wrap(receiveWppMessage(t, o)),
+		negroni.Wrap(receiveWppMessage(messageToChatUsecase)),
 	)).Methods("POST", "OPTIONS")
 }
 
-func receiveWppMessage(t *pkg.Twilio, o *pkg.OpenAI) http.Handler {
+func receiveWppMessage(msgToChatUsecase *usecase.MessageToChat) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -24,6 +24,8 @@ func receiveWppMessage(t *pkg.Twilio, o *pkg.OpenAI) http.Handler {
 			http.Error(w, "Error parsing form data", http.StatusBadRequest)
 			return
 		}
+
+		fmt.Println(r.PostForm)
 
 		request := &dto.TwilioWebhook{
 			Id:                r.Form.Get("SmsSid"),
@@ -37,16 +39,17 @@ func receiveWppMessage(t *pkg.Twilio, o *pkg.OpenAI) http.Handler {
 			From:              r.Form.Get("From"),
 			ApiVersion:        r.Form.Get("ApiVersion"),
 			ChannelInstallSid: r.Form.Get("ChannelInstallSid"),
+			MediaContentType:  r.Form.Get("MediaContentType0"),
+			MediaUrl:          r.Form.Get("MediaUrl0"),
 		}
 
-		message := t.GetMessageBySid(request.MessageSid)
-		chatData, chatErr := o.CompleteChat(*message.Body)
-
-		if chatErr != nil {
-			log.Printf("Error in Open AI")
+		input := &usecase.MessageToChatInput{
+			To:      request.From,
+			From:    request.To,
+			Message: request,
 		}
 
-		err = t.SendMessage(request.To, request.From, chatData)
+		err = msgToChatUsecase.Execute(input)
 
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)

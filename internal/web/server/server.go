@@ -2,7 +2,7 @@ package server
 
 import (
 	"github.com/IamP5/wpp-assistant/internal/web/handler"
-	"github.com/IamP5/wpp-assistant/pkg"
+	"github.com/IamP5/wpp-assistant/usecase"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"log"
@@ -11,20 +11,22 @@ import (
 	"time"
 )
 
-type Webserver struct{}
+type Webserver struct {
+	messageToChatUsecase *usecase.MessageToChat
+}
 
-func MakeNewWebserver() *Webserver {
-	return &Webserver{}
+func MakeNewWebserver(messageToChatUsecase *usecase.MessageToChat) *Webserver {
+	return &Webserver{
+		messageToChatUsecase: messageToChatUsecase,
+	}
 }
 
 func (w *Webserver) Serve() {
 
 	r := mux.NewRouter()
 	n := negroni.New(negroni.NewLogger())
-	t := pkg.MakeTwilio()
-	o := pkg.MakeOpenAI()
 
-	handler.MakeWppHandler(r, n, t, o)
+	handler.MakeWppHandler(r, n, w.messageToChatUsecase)
 	http.Handle("/", r)
 
 	server := &http.Server{

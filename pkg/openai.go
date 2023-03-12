@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"context"
-	"fmt"
 	openai "github.com/sashabaranov/go-openai"
 	"log"
 	"os"
@@ -19,6 +18,8 @@ func MakeOpenAI() *OpenAI {
 }
 
 func (o *OpenAI) CompleteChat(prompt string) (string, error) {
+	log.Println("[OpenAI] - started CompleteChat method")
+
 	resp, err := o.Client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
@@ -33,11 +34,10 @@ func (o *OpenAI) CompleteChat(prompt string) (string, error) {
 	)
 
 	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
+		log.Printf("[OpenAI] - ChatCompletion error: %s", err.Error())
 		return "", err
 	}
 
-	log.Println(resp.Choices[0].Message.Content)
-
+	log.Println("[OpenAI] - CompleteChat with success!")
 	return resp.Choices[0].Message.Content, nil
 }

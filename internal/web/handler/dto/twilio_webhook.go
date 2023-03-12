@@ -12,4 +12,8 @@ type TwilioWebhook struct {
 	From              string
 	ApiVersion        string
 	ChannelInstallSid string
+	MediaContentType  string
+	MediaUrl          string
+	NumMedia          string
+	Body              string
 }

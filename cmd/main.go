@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/IamP5/wpp-assistant/internal/web/server"
+	"github.com/IamP5/wpp-assistant/pkg"
+	"github.com/IamP5/wpp-assistant/usecase"
 	"github.com/joho/godotenv"
 	"log"
 )
@@ -14,6 +16,10 @@ func init() {
 }
 
 func main() {
-	webServer := server.MakeNewWebserver()
+	openApi := pkg.MakeOpenAI()
+	twilio := pkg.MakeTwilio()
+	msgToChatUsecase := usecase.MakeMessageToChat(openApi, twilio)
+
+	webServer := server.MakeNewWebserver(msgToChatUsecase)
 	webServer.Serve()
 }
