@@ -1,8 +1,8 @@
 package server
 
 import (
+	"github.com/IamP5/wpp-assistant/internal/usecase"
 	"github.com/IamP5/wpp-assistant/internal/web/handler"
-	"github.com/IamP5/wpp-assistant/usecase"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"log"

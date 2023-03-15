@@ -1,3 +1,4 @@
 .idea
 .env
+/cmd/decode-poc
 gcp_credentials.json

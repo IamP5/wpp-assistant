@@ -2,8 +2,8 @@ package handler
 
 import (
 	"fmt"
+	"github.com/IamP5/wpp-assistant/internal/usecase"
 	"github.com/IamP5/wpp-assistant/internal/web/handler/dto"
-	"github.com/IamP5/wpp-assistant/usecase"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"net/http"

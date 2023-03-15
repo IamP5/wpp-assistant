@@ -1,9 +1,15 @@
 package pkg
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/api/v2010"
 	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"strings"
 )
 
 type Twilio struct {
@@ -46,4 +52,38 @@ func (t *Twilio) SendMessage(from string, to string, message string) error {
 
 	log.Println("[Twilio SendMessage] - message sent with success!")
 	return err
+}
+
+func (t *Twilio) TranscriptAudioMessage(audioUrl string) (string, error) {
+	log.Println("[Twilio TranscriptAudioMessage] - started method")
+
+	transcriptionParams := url.Values{}
+	transcriptionParams.Set("AudioUrl", audioUrl)
+	transcriptionParams.Set("SpeechModel", "phone_call")
+
+	req, err := http.NewRequest("POST", "https://api.twilio.com/2010-04-01/Accounts/"+os.Getenv("TWILIO_ACCOUNT_SID")+"/Transcriptions.json", strings.NewReader(transcriptionParams.Encode()))
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	req.SetBasicAuth(os.Getenv("TWILIO_ACCOUNT_SID"), os.Getenv("TWILIO_AUTH_TOKEN"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	defer resp.Body.Close()
+
+	// Parse the JSON response body into a map[string]interface{}
+	var transcriptionResp map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&transcriptionResp)
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	// Do something with the transcription response, e.g. print the transcription SID:
+	fmt.Println(transcriptionResp)
+	return transcriptionResp["sid"].(string), nil
 }
